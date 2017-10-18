@@ -2,10 +2,10 @@
 screenw = 800
 screenh = 600
 
-speed_min = 50
+speed_min = 20
 speed_max = 100
 turnspeed_min = 20
-turnspeed_max = 180
+turnspeed_max = 360
 
 debug_draw = false
 
@@ -97,7 +97,7 @@ function idle(self, dt)
 end
 
 function wander(self, dt)
-	self.direction = v2_rotate(self.direction, ((math.random() * 2) - 1) * self.turnspeed * dt)
+	self.direction = v2_rotate_deg(self.direction, ((math.random() * 2) - 1) * self.turnspeed * dt)
 	
 	self.color = { 0, 255, 0 }
 end
@@ -201,7 +201,7 @@ function get_random_position()
 end
 
 function get_random_direction()
-	return v2_rotate({ 0, 1 }, math.random() * 360)
+	return v2_rotate_deg({ 0, 1 }, math.random() * 360)
 end
 
 function v2_add(v1,v2)
@@ -216,7 +216,11 @@ function v2_scale(v, s)
 	return { v[1] * s, v[2] * s }
 end
 
-function v2_rotate(v, th)
+function v2_rotate_deg(v, th)
+	return v2_rotate_rad(v, th * math.pi / 180)
+end
+
+function v2_rotate_rad(v, th)
 	return {
 		v[1] * math.cos(th) + v[2] * -math.sin(th),
 		v[1] * math.sin(th) + v[2] * math.cos(th)
