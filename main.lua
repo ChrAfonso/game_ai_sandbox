@@ -47,13 +47,23 @@ function game:add_time(dt)
 	end
 end
 
+function game:make_seek_targets_flee()
+	for _, bot in ipairs(self.bots) do
+		if bot.behavior == seek and bot.target then
+			bot.target.behavior = flee
+			bot.target.target = bot
+		end
+	end
+end
+
+-- game util
 function add_bot(behavior)
 	return game:create_bot(behavior)
 end
 
 function remove_bot(bot)
 	if #game.bots > 0 then
-		table.remove(game.bots, 1)	
+		table.remove(game.bots, #game.bots)
 	end
 end
 
@@ -174,6 +184,9 @@ function love.keypressed(k)
 	elseif k == "$" then
 		add_bot(flee).target = game.bots[math.random(1, #game.bots - 1)]
 	
+	elseif k == "k" then
+		game:make_seek_targets_flee()
+
 	elseif k == "d" then
 		debug_draw = not debug_draw
 
