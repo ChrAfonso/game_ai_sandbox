@@ -102,9 +102,9 @@ function seek(self, dt)
 	self.color = { 255, 0, 0 }
 end
 
-function evade(self, dt)
+function flee(self, dt)
 	seek(self, dt)
-	v2_scale(self.direction, -1)
+	self.direction = v2_scale(self.direction, -1)
 
 	self.color = { 255, 255, 0 }
 end
@@ -134,6 +134,8 @@ function love.draw()
 			-- seek
 			if bot.behavior == seek and bot.target then
 				love.graphics.line(bot.position[1] + 1, bot.position[2], bot.target.position[1] + 1, bot.target.position[2])
+			elseif bot.behavior == flee and bot.target then
+				love.graphics.line(bot.position[1] - 1, bot.position[2], bot.target.position[1] - 1, bot.target.position[2])
 			end
 		end
 	end
@@ -168,9 +170,9 @@ function love.keypressed(k)
 		add_bot(seek).target = game.bots[math.random(1, #game.bots - 1)] -- -1: Don't seek yourself
 	
 	elseif k == "4" then
-		add_bot(evade).target = game.bots[#game.bots - 1]
+		add_bot(flee).target = game.bots[#game.bots - 1]
 	elseif k == "$" then
-		add_bot(evade).target = game.bots[math.random(1, #game.bots - 1)]
+		add_bot(flee).target = game.bots[math.random(1, #game.bots - 1)]
 	
 	elseif k == "d" then
 		debug_draw = not debug_draw
