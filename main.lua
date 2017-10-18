@@ -7,6 +7,8 @@ speed_max = 100
 turnspeed_min = 20
 turnspeed_max = 180
 
+debug_draw = false
+
 -- global objects
 game = {}
 game.bots = {}
@@ -28,6 +30,15 @@ function game:create_bot(behavior, position, direction, speed, turnspeed)
 	table.insert(self.bots, bot)
 	
 	return bot
+end
+
+function game:remove_all_bots()
+	-- TODO: add more cleanup when it becomes necessary
+	while #self.bots > 0 do
+		local bot = self.bots[#self.bots]
+		bot.target = nil
+		table.remove(self.bots, #self.bots)
+	end
 end
 
 function game:add_time(dt)
@@ -69,29 +80,33 @@ end
 
 -- behaviors
 function idle(self, dt)
-	self.color = { 128, 128, 128 }
 	-- do nothing
+	self.direction = { 0, 0 }
+
+	self.color = { 128, 128, 128 }
 end
 
 function wander(self, dt)
-	self.color = { 0, 255, 0 }
-	
 	self.direction = v2_rotate(self.direction, ((math.random() * 2) - 1) * self.turnspeed * dt)
+	
+	self.color = { 0, 255, 0 }
 end
 
 function seek(self, dt)
-	self.color = { 255, 0, 0 }
-
 	if self.target ~= nil then
 		self.direction = v2_normalize(v2_sub(self.target.position, self.position))
 	else
 		-- keep direction
 	end
+	
+	self.color = { 255, 0, 0 }
 end
 
 function evade(self, dt)
 	seek(self, dt)
 	v2_scale(self.direction, -1)
+
+	self.color = { 255, 255, 0 }
 end
 
 -- love
@@ -111,6 +126,16 @@ function love.draw()
 		local color = bot.color or defaultcolor
 		love.graphics.setColor(color[1], color[2], color[3])
 		love.graphics.circle("fill", bot.position[1], bot.position[2], 5)
+		
+		if debug_draw then
+			-- heading
+			love.graphics.line(bot.position[1], bot.position[2], bot.position[1] + bot.direction[1]*10, bot.position[2] + bot.direction[2]*10)
+			
+			-- seek
+			if bot.behavior == seek and bot.target then
+				love.graphics.line(bot.position[1] + 1, bot.position[2], bot.target.position[1] + 1, bot.target.position[2])
+			end
+		end
 	end
 end
 
@@ -126,20 +151,30 @@ function love.keypressed(k)
 		add_bot()
 	elseif k == "-" then
 		remove_bot()
+	
+	elseif k == "0" then
+		game:remove_all_bots()
+
 	elseif k == "1" then
 		add_bot(idle)
 	elseif k == "2" then
 		add_bot(wander)
-	elseif k == "0" then
+	
+	elseif k == "m" then
 		add_bot(seek).target = mouse
 	elseif k == "3" then
-		add_bot(seek).target = game.bots[-1]
+		add_bot(seek).target = game.bots[#game.bots - 1]
 	elseif k == "#" then
 		add_bot(seek).target = game.bots[math.random(1, #game.bots - 1)] -- -1: Don't seek yourself
+	
 	elseif k == "4" then
-		add_bot(evade).target = game.bots[-1]
+		add_bot(evade).target = game.bots[#game.bots - 1]
 	elseif k == "$" then
 		add_bot(evade).target = game.bots[math.random(1, #game.bots - 1)]
+	
+	elseif k == "d" then
+		debug_draw = not debug_draw
+
 	elseif k == "escape" then
 		os.exit()
 	end
