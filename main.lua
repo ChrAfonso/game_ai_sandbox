@@ -1,3 +1,6 @@
+require "vectormath"
+require "behaviors"
+
 -- global values/settings
 screenw = 800
 screenh = 600
@@ -24,7 +27,11 @@ function game:create_bot(behavior, position, direction, speed, turnspeed)
 	bot.position = position or get_random_position()
 	bot.direction = direction or get_random_direction()
 	
-	bot.speed = speed or math.random(speed_min, speed_max)
+	bot.speed_max = speed or math.random(speed_min, speed_max)
+	bot.acceleration = 10
+
+	bot.speed_current = 0
+	bot.speed_target = 0
 	bot.turnspeed = turnspeed or math.random(turnspeed_min, turnspeed_max)
 	
 	table.insert(self.bots, bot)
@@ -74,8 +81,15 @@ function update_bot(bot, dt)
 end
 
 function move_bot(bot, dt)
-	bot.position = v2_add(bot.position, v2_scale(bot.direction, bot.speed * dt))
-
+	local speed_diff = bot.speed_target - bot.speed_current
+	if(speed_diff > 0.01) then
+		bot.speed_current = bot.speed_current + speed_diff * bot.acceleration * dt
+	else
+		bot.speed_current = bot.speed_target
+	end
+	
+	bot.position = v2_add(bot.position, v2_scale(bot.direction, bot.speed_current * dt))
+	
 	-- HACK wraparound:
 	if bot.position[1] < 0 then
 		bot.position[1] = bot.position[1] + screenw
@@ -86,37 +100,6 @@ function move_bot(bot, dt)
 	elseif bot.position[2] >= screenh then
 		bot.position[2] = bot.position[2] - screenh
 	end
-end
-
--- behaviors
-function idle(self, dt)
-	-- do nothing
-	self.direction = { 0, 0 }
-
-	self.color = { 128, 128, 128 }
-end
-
-function wander(self, dt)
-	self.direction = v2_rotate_deg(self.direction, ((math.random() * 2) - 1) * self.turnspeed * dt)
-	
-	self.color = { 0, 255, 0 }
-end
-
-function seek(self, dt)
-	if self.target ~= nil then
-		self.direction = v2_normalize(v2_sub(self.target.position, self.position))
-	else
-		-- keep direction
-	end
-	
-	self.color = { 255, 0, 0 }
-end
-
-function flee(self, dt)
-	seek(self, dt)
-	self.direction = v2_scale(self.direction, -1)
-
-	self.color = { 255, 255, 0 }
 end
 
 -- love
@@ -175,14 +158,31 @@ function love.keypressed(k)
 	elseif k == "m" then
 		add_bot(seek).target = mouse
 	elseif k == "3" then
-		add_bot(seek).target = game.bots[#game.bots - 1]
-	elseif k == "#" then
-		add_bot(seek).target = game.bots[math.random(1, #game.bots - 1)] -- -1: Don't seek yourself
-	
+		if love.keyboard.isDown("lshift", "rshift") then
+			add_bot(seek).target = game.bots[math.random(1, #game.bots - 1)] -- -1: Don't seek yourself
+		else
+			add_bot(seek).target = game.bots[#game.bots - 1]
+		end
 	elseif k == "4" then
-		add_bot(flee).target = game.bots[#game.bots - 1]
-	elseif k == "$" then
-		add_bot(flee).target = game.bots[math.random(1, #game.bots - 1)]
+		if love.keyboard.isDown("lshift", "rshift") then
+			add_bot(flee).target = game.bots[math.random(1, #game.bots - 1)] -- -1: Don't seek yourself
+		else
+			add_bot(flee).target = game.bots[#game.bots - 1]
+		end
+	
+	elseif k == "5" then
+		if love.keyboard.isDown("lshift", "rshift") then
+			add_bot(arrive).target = game.bots[math.random(1, #game.bots - 1)] -- -1: Don't seek yourself
+		else
+			add_bot(arrive).target = game.bots[#game.bots - 1]
+		end
+
+	elseif k == "6" then
+		if love.keyboard.isDown("lshift", "rshift") then
+			add_bot(investigate).target = game.bots[math.random(1, #game.bots - 1)] -- -1: Don't seek yourself
+		else
+			add_bot(investigate).target = game.bots[#game.bots - 1]
+		end
 	
 	elseif k == "k" then
 		game:make_seek_targets_flee()
@@ -195,7 +195,7 @@ function love.keypressed(k)
 	end
 end
 
--- vector
+-- vector utils
 function get_random_position()
 	return { math.random() * screenw, math.random() * screenh }
 end
@@ -203,37 +203,4 @@ end
 function get_random_direction()
 	return v2_rotate_deg({ 0, 1 }, math.random() * 360)
 end
-
-function v2_add(v1,v2)
-	return { v1[1] + v2[1], v1[2] + v2[2] }
-end
-
-function v2_sub(v1,v2)
-	return { v1[1] - v2[1], v1[2] - v2[2] }
-end
-
-function v2_scale(v, s)
-	return { v[1] * s, v[2] * s }
-end
-
-function v2_rotate_deg(v, th)
-	return v2_rotate_rad(v, th * math.pi / 180)
-end
-
-function v2_rotate_rad(v, th)
-	return {
-		v[1] * math.cos(th) + v[2] * -math.sin(th),
-		v[1] * math.sin(th) + v[2] * math.cos(th)
-	}
-end
-
-function v2_normalize(v)
-	local l = math.sqrt(v[1] * v[1] + v[2] * v[2])
-	if l > 0 then
-		return v2_scale(v, 1/l)
-	else
-		return { 0, 0 }
-	end
-end
-
 
