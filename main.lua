@@ -102,6 +102,42 @@ function move_bot(bot, dt)
 	end
 end
 
+function draw_bot(bot)
+	local fillmode = "fill"
+	if bot.visible == false then
+		if debug_draw then
+			fillmode = "line"
+		else
+			return
+		end
+	end
+
+	local color = bot.color or default_bot_color
+	love.graphics.setColor(color[1], color[2], color[3])
+	love.graphics.circle(fillmode, bot.position[1], bot.position[2], 5)
+	
+	if debug_draw then
+		-- heading
+		love.graphics.line(bot.position[1], bot.position[2], bot.position[1] + bot.direction[1]*10, bot.position[2] + bot.direction[2]*10)
+		
+		-- line to target
+		if bot.target ~= nil then
+			local draw_line = true
+			if bot.behavior == investigate then
+				if bot.behavior_state == wander then
+					draw_line = false
+					love.graphics.print(string.format("%.0f", bot.cooldown), bot.position[1] - 5, bot.position[2] - 20)
+				end
+			end
+
+			if draw_line then
+				love.graphics.line(bot.position[1], bot.position[2], bot.target.position[1], bot.target.position[2])
+			end
+		end
+	end	
+end
+
+
 -- love
 function love.load()
 	love.window.setMode(screenw, screenh)
@@ -116,21 +152,7 @@ function love.draw()
 	local defaultcolor = { 255, 255, 255 }
 
 	for _, bot in ipairs(game.bots) do
-		local color = bot.color or defaultcolor
-		love.graphics.setColor(color[1], color[2], color[3])
-		love.graphics.circle("fill", bot.position[1], bot.position[2], 5)
-		
-		if debug_draw then
-			-- heading
-			love.graphics.line(bot.position[1], bot.position[2], bot.position[1] + bot.direction[1]*10, bot.position[2] + bot.direction[2]*10)
-			
-			-- seek
-			if bot.behavior == seek and bot.target then
-				love.graphics.line(bot.position[1] + 1, bot.position[2], bot.target.position[1] + 1, bot.target.position[2])
-			elseif bot.behavior == flee and bot.target then
-				love.graphics.line(bot.position[1] - 1, bot.position[2], bot.target.position[1] - 1, bot.target.position[2])
-			end
-		end
+		draw_bot(bot)
 	end
 end
 
