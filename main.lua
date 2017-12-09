@@ -139,6 +139,21 @@ function draw_bot(bot)
 	end	
 end
 
+function create_dancer_pair(center, formation, offset, rotate_speed)
+	local dancer1 = add_bot(formation)
+	local dancer2 = add_bot(formation)
+	
+	dancer1.leader = center
+	dancer1.offset = v2_copy(offset)
+	dancer1.rotate_speed = rotate_speed
+	dancer1.position = v2_add(center.position, dancer1.offset)
+
+	dancer2.leader = center
+	dancer2.offset = v2_scale(offset, -1)
+	dancer2.rotate_speed = rotate_speed
+	dancer2.position = v2_add(center.position, dancer2.offset)
+end
+
 
 -- love
 function love.load()
@@ -221,19 +236,34 @@ function love.keypressed(k)
 		local offset = v2_rotate_deg({ 0, 10 + math.random() * 20 }, math.random() * 360)
 		local rotate_speed = 10 + math.random() * 170
 		
-		local dancer1 = add_bot(dance.circle_leader)
-		local dancer2 = add_bot(dance.circle_leader)
+		create_dancer_pair(center, dance.circle_leader, offset, rotate_speed)
+	
+	elseif k == "9" then
+		-- params
+		local pairs_spacing = 50 + math.random() * 50 
+		local dim = 2 + math.floor(math.random() * 3)
 		
-		dancer1.leader = center
-		dancer1.offset = offset -- TODO make copy?
-		dancer1.rotate_speed = rotate_speed
-		dancer1.position = v2_add(center.position, dancer1.offset)
+		local offset = v2_rotate_deg({ 0, 10 + math.random() * 20 }, math.random() * 360)
+		local rotate_speed = 10 + math.random() * 170
+	
+		-- formation center
+		local array_center = add_bot(wander)
+		array_center.visible = false
 
-		dancer2.leader = center
-		dancer2.offset = v2_scale(offset, -1)
-		dancer2.rotate_speed = rotate_speed
-		dancer2.position = v2_add(center.position, dancer2.offset)
-
+		local array_pair_centers = {}
+		for j = 1,dim do
+			array_pair_centers[j] = {}
+			for i = 1,dim do
+				local center = add_bot(dance.follow_leader)
+				center.offset = { pairs_spacing*(i - (dim+1)/2), pairs_spacing*(j - (dim+1)/2) }
+				center.visible = false
+				center.leader = array_center
+				array_pair_centers[j][i] = center
+				
+				create_dancer_pair(center, dance.circle_leader, offset, rotate_speed)
+			end
+		end
+	
 	elseif k == "k" then
 		game:make_seek_targets_flee()
 
