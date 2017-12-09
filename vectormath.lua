@@ -1,3 +1,7 @@
+function v2_copy(v1)
+	return { v1[1], v1[2] }
+end
+
 function v2_add(v1,v2)
 	return { v1[1] + v2[1], v1[2] + v2[2] }
 end
@@ -32,5 +36,9 @@ function v2_normalize(v)
 	else
 		return { 0, 0 }
 	end
+end
+
+function v2_look_at(position, target_position)
+	return v2_normalize(v2_sub(target_position, position))
 end
 

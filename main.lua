@@ -1,5 +1,6 @@
 require "vectormath"
 require "behaviors"
+require "dfigures"
 
 -- global values/settings
 screenw = 800
@@ -11,6 +12,7 @@ turnspeed_min = 20
 turnspeed_max = 360
 
 debug_draw = false
+default_bot_color = { 255, 255, 255 }
 
 -- global objects
 game = {}
@@ -149,8 +151,6 @@ end
 function love.draw()
 	love.graphics.clear()
 
-	local defaultcolor = { 255, 255, 255 }
-
 	for _, bot in ipairs(game.bots) do
 		draw_bot(bot)
 	end
@@ -206,6 +206,34 @@ function love.keypressed(k)
 			add_bot(investigate).target = game.bots[#game.bots - 1]
 		end
 	
+	-- prototype dance figures
+	elseif k == "7" then
+		local leader = add_bot(wander)
+		local follower = add_bot(dance.follow_leader)
+		follower.leader = leader
+		follower.offset = v2_rotate_deg({ 0, 10 + math.random() * 20 }, math.random() * 360)
+		follower.position = v2_add(leader.position, follower.offset)
+	
+	elseif k == "8" then
+		local center = add_bot(wander)
+		center.visible = false
+
+		local offset = v2_rotate_deg({ 0, 10 + math.random() * 20 }, math.random() * 360)
+		local rotate_speed = 10 + math.random() * 170
+		
+		local dancer1 = add_bot(dance.circle_leader)
+		local dancer2 = add_bot(dance.circle_leader)
+		
+		dancer1.leader = center
+		dancer1.offset = offset -- TODO make copy?
+		dancer1.rotate_speed = rotate_speed
+		dancer1.position = v2_add(center.position, dancer1.offset)
+
+		dancer2.leader = center
+		dancer2.offset = v2_scale(offset, -1)
+		dancer2.rotate_speed = rotate_speed
+		dancer2.position = v2_add(center.position, dancer2.offset)
+
 	elseif k == "k" then
 		game:make_seek_targets_flee()
 

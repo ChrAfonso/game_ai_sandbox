@@ -12,6 +12,13 @@ function wander(self, dt)
 	self.color = { 0, 255, 0 }
 end
 
+-- utility behavior for formations, or fall-back for edge cases
+function snap_to_target(self)
+	if self.target then
+		self.position = v2_copy(self.target.position)
+	end
+end
+
 function seek(self, dt)
 	self.speed_target = self.speed_max
 
