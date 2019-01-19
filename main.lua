@@ -136,7 +136,17 @@ function draw_bot(bot)
 				love.graphics.line(bot.position[1], bot.position[2], bot.target.position[1], bot.target.position[2])
 			end
 		end
-	end	
+		
+		if bot.rotate_distance ~= nil then
+			love.graphics.print("speed:" .. bot.speed_current, bot.position[1], bot.position[2] + 10)
+			love.graphics.print("rdist:" .. bot.rotate_distance, bot.position[1], bot.position[2] + 20)
+			love.graphics.line(bot.target.position[1], bot.target.position[2], bot.next_target.position[1], bot.next_target.position[2])
+			if bot.next_angle ~= nil then
+				love.graphics.setColor(127, 127, 255)
+				love.graphics.print("angle:" .. bot.next_angle, bot.target.position[1], bot.target.position[2])
+			end
+		end
+	end
 end
 
 function create_dancer_pair(center, formation, offset, rotate_speed)
@@ -169,6 +179,16 @@ function love.draw()
 	for _, bot in ipairs(game.bots) do
 		draw_bot(bot)
 	end
+
+	--[[
+	-- TEST DEBUG
+	local v1 = {0, 10}
+	local v2
+	for i = 0,360,10 do
+		v2 = v2_rotate_deg(v1, i)
+		love.graphics.print(i..":{"..v2[1]..","..v2[2].."},"..math.deg(v2_angle_between(v1, v2, true)), 0, i)
+	end
+	--]]
 end
 
 function love.update(dt)
@@ -264,15 +284,35 @@ function love.keypressed(k)
 			end
 		end
 	
+	-- fly route between idles
+	elseif k == "f" then
+		local bot = add_bot(fly_waypoints)
+		bot.targets = game:get_bots_with_behavior(idle)
+
 	elseif k == "k" then
 		game:make_seek_targets_flee()
-
+	
 	elseif k == "d" then
 		debug_draw = not debug_draw
 
 	elseif k == "escape" then
 		os.exit()
 	end
+end
+
+function love.mousepressed(x, y, button)
+	add_bot(idle, {x, y})
+end
+
+function game:get_bots_with_behavior(behavior)
+	local bots = {}
+	for _,bot in ipairs(self.bots) do
+		if bot.behavior == behavior then
+			table.insert(bots, bot)
+		end
+	end
+
+	return bots
 end
 
 -- vector utils
