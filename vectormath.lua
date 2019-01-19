@@ -25,8 +25,25 @@ function v2_rotate_rad(v, th)
 	}
 end
 
+function v2_angle_between(v1, v2, smaller)
+	smaller = smaller or false
+	
+	-- TODO: This does not return angles > 180!
+	local angle = math.acos((v2_dot(v1, v2))/(v2_magnitude(v1) * v2_magnitude(v2)))
+	
+	if smaller == true then
+		angle = math.min(angle, v2_angle_between(v2, v1, false))
+	end
+
+	return angle
+end
+
 function v2_magnitude(v)
 	return math.sqrt(v[1] * v[1] + v[2] * v[2])
+end
+
+function v2_distance(position1, position2)
+	return v2_magnitude(v2_sub(position2, position1))
 end
 
 function v2_normalize(v)
@@ -36,6 +53,10 @@ function v2_normalize(v)
 	else
 		return { 0, 0 }
 	end
+end
+
+function v2_dot(v1, v2)
+	return (v1[1] * v2[1]) + (v1[2] * v2[2])
 end
 
 function v2_look_at(position, target_position)
