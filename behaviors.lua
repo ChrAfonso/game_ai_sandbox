@@ -102,12 +102,7 @@ function fly_waypoints(self, dt)
 		self.rotate_distance, self.rotate_debug = get_rotate_distance(self, self.target, self.next_target, self.dps, self.speed_current)
 		if v2_distance(self.position, self.target.position) < self.rotate_distance then
 			self.state = "rotate_to"
-			local angle = math.deg(v2_angle_between(v2_sub(self.target.position, self.position), v2_sub(self.next_target.position, self.target.position), false))
-			if angle < 180 then
-				self.rotate_sign = 1
-			else
-				self.rotate_sign = -1
-			end
+			self.rotate_sign = leftright_sign(self.position, self.target.position, self.next_target.position)
 		else
 			self.direction = v2_look_at(self.position, self.target.position)
 		end
@@ -140,6 +135,10 @@ function math_sign(num)
 	else 
 		return 0
 	end
+end
+
+function leftright_sign(p1, p2, p3)
+	return math_sign(v2_cross(v2_sub(p2, p1), v2_sub(p3, p2)))
 end
 
 function get_rotate_distance(bot, target, next_target, dps, speed)
