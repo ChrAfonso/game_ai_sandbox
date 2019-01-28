@@ -66,8 +66,8 @@ function game:make_seek_targets_flee()
 end
 
 -- game util
-function add_bot(behavior)
-	return game:create_bot(behavior)
+function add_bot(behavior, position)
+	return game:create_bot(behavior, position)
 end
 
 function remove_bot(bot)
@@ -154,10 +154,10 @@ function draw_bot(bot)
 				-- draw debug turn geometry
 				local debug = bot.rotate_debug
 				love.graphics.setColor(128, 0, 128)
-				local p1v = v2_add(debug.p1, debug.v1)
-				local p2v = v2_add(debug.p2, debug.v2)
-				love.graphics.line(debug.p1[1], debug.p1[2], p1v[1], p1v[2])
-				love.graphics.line(debug.p2[1], debug.p2[2], p2v[1], p2v[2])
+				local p1v = debug.p1 -- v2_add(debug.p1, v2_scale(debug.v1, -2*debug.r))
+				local p2v = debug.p2 -- v2_add(debug.p2, v2_scale(debug.v2, -2*debug.r))
+				love.graphics.line(debug.center[1], debug.center[2], p1v[1], p1v[2])
+				love.graphics.line(debug.center[1], debug.center[2], p2v[1], p2v[2])
 				love.graphics.circle("line", debug.center[1], debug.center[2], debug.r)
 
 			end
@@ -195,25 +195,6 @@ function love.draw()
 	for _, bot in ipairs(game.bots) do
 		draw_bot(bot)
 	end
-
-	
-	-- TEST DEBUG
-	--[[
-	p1 = p1 or { math.random(600), math.random(400) }
-	v1 = v1 or v2_rotate_rad({ 1, 0 }, math.random(360))
-	p2 = p2 or { math.random(600), math.random(400) }
-	v2 = v2 or v2_rotate_rad({ 1, 0 }, math.random(360))
-	cr = cr or v2_intersect_lines(p1, v1, p2, v2)
-	love.graphics.circle("fill", p1[1], p1[2], 2)
-	love.graphics.circle("fill", p2[1], p2[2], 2)
-
-	local p1p = v2_add(p1, v2_scale(v1, 50))
-	local p2p = v2_add(p2, v2_scale(v2, 50))
-	love.graphics.line(p1[1], p1[2], p1p[1], p1p[2])
-	love.graphics.line(p2[1], p2[2], p2p[1], p2p[2])
-	
-	love.graphics.circle("fill", cr[1], cr[2], 4)
-	]]--
 end
 
 function love.update(dt)
