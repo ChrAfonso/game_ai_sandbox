@@ -99,7 +99,7 @@ function fly_waypoints(self, dt)
 	self.speed_target = self.speed_max
 	
 	if self.state == "track_to" then
-		self.rotate_distance = get_rotate_distance(self, self.target, self.next_target, self.dps, self.speed_current)
+		self.rotate_distance, self.rotate_debug = get_rotate_distance(self, self.target, self.next_target, self.dps, self.speed_current)
 		if v2_distance(self.position, self.target.position) < self.rotate_distance then
 			self.state = "rotate_to"
 			local angle = math.deg(v2_angle_between(v2_sub(self.target.position, self.position), v2_sub(self.next_target.position, self.target.position), false))
@@ -134,9 +134,39 @@ function fly_waypoints(self, dt)
 end
 
 -- util
+function math_sign(num)
+	if num ~= 0 then
+		return num / math.abs(num)
+	else 
+		return 0
+	end
+end
+
 function get_rotate_distance(bot, target, next_target, dps, speed)
-	local angle = math.deg(v2_angle_between(v2_sub(target.position, bot.position), v2_sub(next_target.position, target.position), true))
-	bot.next_angle = angle
-	return (speed * angle) / (2 * dps); -- 1, not 3600, because: speed here is in pixels/s, not /hour
+	--TODO
+	local v1 = v2_normalize(v2_sub(target.position, bot.position))
+	local v2 = v2_normalize(v2_sub(next_target.position, target.position))
+	
+	local sign = math_sign(v2_cross(v1, v2)) -- negative for right
+
+	-- determine turn radius at speed
+	local r = (360/bot.dps * speed) / (2*math.pi)
+	-- get parallel lines - IMPORTANT: direction to other point - left/right? hardcoded sign is for right turns only...
+	local n1 = v2_rotate_deg(v1, 90 * sign)
+	local n2 = v2_rotate_deg(v2, 90 * sign)
+	local p1 = v2_add(bot.position, v2_scale(n1, r))
+	local p2 = v2_add(next_target.position, v2_scale(n2, r))
+
+	-- intersect to get Cross point
+	local c = v2_intersect_lines(p1, v1, p2, v2)
+	if not c then
+		return 0 -- parallel: just continue
+	end
+
+	-- add -normal * r to C, get turn start point
+	local p_start_rot = v2_sub(c, n1)
+
+	-- get distance from target
+	return v2_distance(target.position, p_start_rot), {center=c, pstart=p_start_rot, r=r, v1=v1, v2=v2, n1=n1, n2=n2, p1=p1, p2=p2 }
 end
 

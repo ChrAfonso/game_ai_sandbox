@@ -46,6 +46,19 @@ function v2_distance(position1, position2)
 	return v2_magnitude(v2_sub(position2, position1))
 end
 
+function v2_intersect_lines(p1, v1, p2, v2)
+	if v2_angle_between(v1, v2) == 0 then
+		return nil
+	end
+	
+	-- crossing point: p1 + a * v1 = p2 + b * v2
+	local a = v2_cross(v2_sub(p2, p1), v2)/v2_cross(v1, v2)
+	local b = v2_cross(v2_sub(p2, p1), v1)/v2_cross(v1, v2)
+	-- debug:
+	print("DEBUG v2_cross: a:" .. a .. ", b: " ..b)
+	return v2_add(p1, v2_scale(v1, a))
+end
+
 function v2_normalize(v)
 	local l = v2_magnitude(v) 
 	if l > 0 then
@@ -57,6 +70,10 @@ end
 
 function v2_dot(v1, v2)
 	return (v1[1] * v2[1]) + (v1[2] * v2[2])
+end
+
+function v2_cross(v1, v2)
+	return (v1[1] * v2[2]) - (v2[1] * v1[2])
 end
 
 function v2_look_at(position, target_position)

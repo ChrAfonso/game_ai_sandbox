@@ -137,13 +137,29 @@ function draw_bot(bot)
 			end
 		end
 		
-		if bot.rotate_distance ~= nil then
-			love.graphics.print("speed:" .. bot.speed_current, bot.position[1], bot.position[2] + 10)
-			love.graphics.print("rdist:" .. bot.rotate_distance, bot.position[1], bot.position[2] + 20)
-			love.graphics.line(bot.target.position[1], bot.target.position[2], bot.next_target.position[1], bot.next_target.position[2])
-			if bot.next_angle ~= nil then
-				love.graphics.setColor(127, 127, 255)
-				love.graphics.print("angle:" .. bot.next_angle, bot.target.position[1], bot.target.position[2])
+		if bot.behavior == fly_waypoints then
+			--DEBUG
+
+			-- keep
+			if bot.rotate_distance ~= nil then
+				-- draw debug values
+				love.graphics.print("speed:" .. bot.speed_current, bot.position[1], bot.position[2] + 10)
+				love.graphics.print("rdist:" .. bot.rotate_distance, bot.position[1], bot.position[2] + 20)
+				love.graphics.line(bot.target.position[1], bot.target.position[2], bot.next_target.position[1], bot.next_target.position[2])
+				if bot.next_angle ~= nil then
+					love.graphics.setColor(127, 127, 255)
+					love.graphics.print("angle:" .. bot.next_angle, bot.target.position[1], bot.target.position[2])
+				end
+
+				-- draw debug turn geometry
+				local debug = bot.rotate_debug
+				love.graphics.setColor(128, 0, 128)
+				local p1v = v2_add(debug.p1, debug.v1)
+				local p2v = v2_add(debug.p2, debug.v2)
+				love.graphics.line(debug.p1[1], debug.p1[2], p1v[1], p1v[2])
+				love.graphics.line(debug.p2[1], debug.p2[2], p2v[1], p2v[2])
+				love.graphics.circle("line", debug.center[1], debug.center[2], debug.r)
+
 			end
 		end
 	end
@@ -180,15 +196,24 @@ function love.draw()
 		draw_bot(bot)
 	end
 
-	--[[
+	
 	-- TEST DEBUG
-	local v1 = {0, 10}
-	local v2
-	for i = 0,360,10 do
-		v2 = v2_rotate_deg(v1, i)
-		love.graphics.print(i..":{"..v2[1]..","..v2[2].."},"..math.deg(v2_angle_between(v1, v2, true)), 0, i)
-	end
-	--]]
+	--[[
+	p1 = p1 or { math.random(600), math.random(400) }
+	v1 = v1 or v2_rotate_rad({ 1, 0 }, math.random(360))
+	p2 = p2 or { math.random(600), math.random(400) }
+	v2 = v2 or v2_rotate_rad({ 1, 0 }, math.random(360))
+	cr = cr or v2_intersect_lines(p1, v1, p2, v2)
+	love.graphics.circle("fill", p1[1], p1[2], 2)
+	love.graphics.circle("fill", p2[1], p2[2], 2)
+
+	local p1p = v2_add(p1, v2_scale(v1, 50))
+	local p2p = v2_add(p2, v2_scale(v2, 50))
+	love.graphics.line(p1[1], p1[2], p1p[1], p1p[2])
+	love.graphics.line(p2[1], p2[2], p2p[1], p2p[2])
+	
+	love.graphics.circle("fill", cr[1], cr[2], 4)
+	]]--
 end
 
 function love.update(dt)
